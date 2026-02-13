@@ -33,7 +33,9 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        if (data.user.role === 'teacher') {
+        if (data.user.role === 'admin') {
+          router.push('/admin/dashboard');
+        } else if (data.user.role === 'teacher') {
           router.push('/teacher/dashboard');
         } else {
           router.push('/student/dashboard');

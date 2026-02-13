@@ -1,16 +1,55 @@
 'use client';
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   FaVideo, FaChalkboardTeacher, FaRobot, FaChartLine, 
   FaUsers, FaTrophy, FaBookReader, FaGraduationCap,
-  FaClock, FaPencilAlt, FaApple, FaBook, FaLightbulb, FaChalkboard
+  FaClock, FaPencilAlt, FaApple, FaBook, FaLightbulb, FaChalkboard, FaSignOutAlt
 } from "react-icons/fa";
 
 export default function Home() {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/auth/me');
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Error checking auth:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setUser(null);
+    router.refresh();
+  };
+
+  const goToDashboard = () => {
+    if (user?.role === 'admin') {
+      router.push('/admin/dashboard');
+    } else if (user?.role === 'teacher') {
+      router.push('/teacher/dashboard');
+    } else {
+      router.push('/student/dashboard');
+    }
+  };
   const wiggle = {
     rotate: [-2, 2, -2, 2, 0],
     transition: {
@@ -59,22 +98,48 @@ export default function Home() {
             </span>
           </Link>
           <nav className="flex items-center gap-4">
-            <Link href="/login">
-              <Button 
-                variant="outline" 
-                className="doodle-button border-green-800 bg-white hover:bg-green-50 text-green-800 font-bold text-lg px-6"
-              >
-                Login
-              </Button>
-            </Link>
-            <Link href="/register">
-              <motion.div whileHover={{ scale: 1.05, rotate: -2 }} whileTap={{ scale: 0.95 }}>
-                <Button className="doodle-button bg-green-500 hover:bg-green-600 text-white font-bold text-lg px-8 border-green-800">
-                  <FaPencilAlt className="mr-2" />
-                  Join Now!
+            {loading ? (
+              <div className="animate-pulse h-10 w-32 bg-gray-200 rounded"></div>
+            ) : user ? (
+              <>
+                <span className="text-green-800 font-semibold">
+                  Hello, {user.name}!
+                </span>
+                <Button 
+                  onClick={goToDashboard}
+                  className="doodle-button bg-green-500 hover:bg-green-600 text-white font-bold text-lg px-6 border-green-800"
+                >
+                  Dashboard
                 </Button>
-              </motion.div>
-            </Link>
+                <Button 
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="doodle-button border-red-600 bg-white hover:bg-red-50 text-red-600 font-bold text-lg px-6"
+                >
+                  <FaSignOutAlt className="mr-2" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button 
+                    variant="outline" 
+                    className="doodle-button border-green-800 bg-white hover:bg-green-50 text-green-800 font-bold text-lg px-6"
+                  >
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <motion.div whileHover={{ scale: 1.05, rotate: -2 }} whileTap={{ scale: 0.95 }}>
+                    <Button className="doodle-button bg-green-500 hover:bg-green-600 text-white font-bold text-lg px-8 border-green-800">
+                      <FaPencilAlt className="mr-2" />
+                      Join Now!
+                    </Button>
+                  </motion.div>
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </motion.header>
@@ -108,28 +173,45 @@ export default function Home() {
             </p>
 
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link href="/register">
+              {user ? (
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button className="doodle-button bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold text-lg px-8 py-6 border-3 border-yellow-700 shadow-lg">
-                    <FaGraduationCap className="mr-2 text-xl" />
-                    Start Learning
+                  <Button 
+                    onClick={goToDashboard}
+                    className="doodle-button bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold text-lg px-8 py-6 border-3 border-yellow-700 shadow-lg"
+                  >
+                    <FaChalkboard className="mr-2 text-xl" />
+                    Go to Dashboard
                   </Button>
                 </motion.div>
-              </Link>
-              <Link href="/login">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button className="doodle-button bg-green-400 hover:bg-green-500 text-green-900 font-bold text-lg px-8 py-6 border-3 border-green-700 shadow-lg">
-                    <FaChalkboardTeacher className="mr-2 text-xl" />
-                    I'm a Teacher
-                  </Button>
-                </motion.div>
-              </Link>
+              ) : (
+                <>
+                  <Link href="/register">
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button className="doodle-button bg-yellow-400 hover:bg-yellow-500 text-green-900 font-bold text-lg px-8 py-6 border-3 border-yellow-700 shadow-lg">
+                        <FaGraduationCap className="mr-2 text-xl" />
+                        Start Learning
+                      </Button>
+                    </motion.div>
+                  </Link>
+                  <Link href="/login">
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button className="doodle-button bg-green-400 hover:bg-green-500 text-green-900 font-bold text-lg px-8 py-6 border-3 border-green-700 shadow-lg">
+                        <FaChalkboardTeacher className="mr-2 text-xl" />
+                        I'm a Teacher
+                      </Button>
+                    </motion.div>
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         </div>
@@ -300,12 +382,22 @@ export default function Home() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Link href="/register">
-              <Button className="doodle-button bg-white hover:bg-gray-100 text-green-800 font-bold text-xl px-12 py-6 border-4 border-green-800 shadow-xl">
-                <FaGraduationCap className="mr-3 text-2xl" />
-                Sign Up Now
+            {user ? (
+              <Button 
+                onClick={goToDashboard}
+                className="doodle-button bg-white hover:bg-gray-100 text-green-800 font-bold text-xl px-12 py-6 border-4 border-green-800 shadow-xl"
+              >
+                <FaChalkboard className="mr-3 text-2xl" />
+                Go to Dashboard
               </Button>
-            </Link>
+            ) : (
+              <Link href="/register">
+                <Button className="doodle-button bg-white hover:bg-gray-100 text-green-800 font-bold text-xl px-12 py-6 border-4 border-green-800 shadow-xl">
+                  <FaGraduationCap className="mr-3 text-2xl" />
+                  Sign Up Now
+                </Button>
+              </Link>
+            )}
           </motion.div>
         </motion.div>
       </section>

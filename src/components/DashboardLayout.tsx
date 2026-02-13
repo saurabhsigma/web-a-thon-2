@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import {
   FaChalkboard, FaChalkboardTeacher, FaVideo, FaBook,
   FaUsers, FaGraduationCap, FaTrophy, FaQuestionCircle,
-  FaSignOutAlt, FaHome, FaClock, FaClipboardList
+  FaSignOutAlt, FaHome, FaClock, FaClipboardList, FaBullhorn, FaChartLine
 } from 'react-icons/fa';
 import { ReactNode } from 'react';
 import AIChatbot from '@/components/AIChatbot';
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  userRole: 'teacher' | 'student';
+  userRole: 'teacher' | 'student' | 'admin';
   userName?: string;
 }
 
@@ -35,6 +35,7 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
     { href: '/teacher/attendance', icon: FaClipboardList, label: 'Attendance' },
     { href: '/teacher/materials', icon: FaBook, label: 'Materials' },
     { href: '/teacher/quizzes', icon: FaQuestionCircle, label: 'Quizzes' },
+    { href: '/teacher/notices', icon: FaBullhorn, label: 'Notices' },
   ];
 
   const studentNavItems = [
@@ -43,9 +44,16 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
     { href: '/student/sessions', icon: FaVideo, label: 'Sessions' },
     { href: '/student/materials', icon: FaBook, label: 'Materials' },
     { href: '/student/quizzes', icon: FaTrophy, label: 'My Quizzes' },
+    { href: '/student/notices', icon: FaBullhorn, label: 'Notices' },
   ];
 
-  const navItems = userRole === 'teacher' ? teacherNavItems : studentNavItems;
+  const adminNavItems = [
+    { href: '/admin/dashboard', icon: FaHome, label: 'Dashboard' },
+    { href: '/admin/notices', icon: FaBullhorn, label: 'Notices' },
+    { href: '/admin/analytics', icon: FaChartLine, label: 'Analytics' },
+  ];
+
+  const navItems = userRole === 'admin' ? adminNavItems : userRole === 'teacher' ? teacherNavItems : studentNavItems;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-yellow-50 to-blue-50">
