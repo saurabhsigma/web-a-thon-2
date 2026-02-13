@@ -31,8 +31,8 @@ export default function StudentSessionsPage() {
     }
   };
 
-  const joinSession = async (sessionId: string, livekitRoomId: string) => {
-    window.location.href = `/student/live/${livekitRoomId}`;
+  const joinSession = async (sessionId: string) => {
+    window.location.href = `/session/${sessionId}`;
   };
 
   return (
@@ -80,9 +80,8 @@ export default function StudentSessionsPage() {
                       <CardTitle className="text-xl font-bold text-green-800">
                         {session.title}
                       </CardTitle>
-                      <Badge className={`text-sm font-bold ${
-                        session.status === 'live' ? 'bg-red-500 animate-pulse' : 'bg-yellow-500'
-                      }`}>
+                      <Badge className={`text-sm font-bold ${session.status === 'live' ? 'bg-red-500 animate-pulse' : 'bg-yellow-500'
+                        }`}>
                         {session.status === 'live' ? '🔴 LIVE' : session.status}
                       </Badge>
                     </div>
@@ -95,7 +94,7 @@ export default function StudentSessionsPage() {
                           {new Date(session.startTime).toLocaleDateString()}
                         </p>
                         <p className="text-xs text-gray-600 font-medium">
-                          {new Date(session.startTime).toLocaleTimeString()} - 
+                          {new Date(session.startTime).toLocaleTimeString()} -
                           {new Date(session.endTime).toLocaleTimeString()}
                         </p>
                       </div>
@@ -113,7 +112,7 @@ export default function StudentSessionsPage() {
                         whileTap={{ scale: 0.95 }}
                       >
                         <Button
-                          onClick={() => joinSession(session._id, session.livekitRoomId)}
+                          onClick={() => joinSession(session._id)}
                           className="doodle-button w-full bg-green-500 hover:bg-green-600 text-white font-bold border-3 border-green-800"
                         >
                           <FaVideo className="mr-2" />

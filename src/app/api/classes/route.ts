@@ -14,18 +14,38 @@ export async function GET(req: NextRequest) {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: string };
-    if (decoded.role !== 'teacher') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-    }
+    // Remove strict teacher check to allow students to fetch classes
 
     await connectDB();
 
-    const classes = await Class.find({ teacherId: decoded.userId })
+    let query: any = {};
+    if (decoded.role === 'teacher') {
+      query.teacherId = decoded.userId;
+    } else if (decoded.role === 'student') {
+      const User = require('@/models/User').default;
+      const user = await User.findById(decoded.userId);
+      if (user && user.classId) {
+        // If already enrolled, only show their class
+        query._id = user.classId;
+      }
+      // If not enrolled, query remains empty -> fetch all classes (to allow joining)
+    }
+
+    const classes = await Class.find(query)
       .populate('students', 'name email avatar')
       .populate('subjects')
+      .populate('teacherId', 'name email')
       .sort({ createdAt: -1 });
 
-    return NextResponse.json({ classes }, { status: 200 });
+    const classesWithEnrollment = classes.map(cls => {
+      const clsObj = cls.toObject() as any;
+      if (decoded.role === 'student') {
+        clsObj.isEnrolled = cls.students.some((s: any) => s._id.toString() === decoded.userId);
+      }
+      return clsObj;
+    });
+
+    return NextResponse.json({ classes: classesWithEnrollment }, { status: 200 });
   } catch (error: any) {
     console.error('Get classes error:', error);
     return NextResponse.json({ error: 'Failed to get classes' }, { status: 500 });
@@ -53,12 +73,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Name and grade are required' }, { status: 400 });
     }
 
+    // Calculate academic year (e.g. 2023-2024)
+    const currentYear = new Date().getFullYear();
+    const academicYear = `${currentYear}-${currentYear + 1}`;
+
     const newClass = await Class.create({
       name,
       grade,
       section,
       description,
       teacherId: decoded.userId,
+      academicYear,
       schedule: schedule || [],
       students: [],
       subjects: [],

@@ -24,7 +24,18 @@ export async function GET(req: NextRequest) {
     let query: any = {};
     if (decoded.role === 'teacher') {
       query.teacherId = decoded.userId;
+    } else if (decoded.role === 'student') {
+      // Fetch user to get classId
+      const User = require('@/models/User').default;
+      const user = await User.findById(decoded.userId);
+      if (user && user.classId) {
+        query.classId = user.classId;
+      } else {
+        // If student has no class, return empty
+        return NextResponse.json({ sessions: [] }, { status: 200 });
+      }
     }
+
     if (classId) {
       query.classId = classId;
     }
@@ -109,5 +120,48 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Create session error:', error);
     return NextResponse.json({ error: 'Failed to create session' }, { status: 500 });
+  }
+}
+
+// Update session (e.g. status)
+export async function PUT(req: NextRequest) {
+  try {
+    const token = req.cookies.get('auth_token')?.value;
+    if (!token) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: string };
+    if (decoded.role !== 'teacher') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    await connectDB();
+
+    const { sessionId, status } = await req.json();
+
+    if (!sessionId || !status) {
+      return NextResponse.json({ error: 'Session ID and status are required' }, { status: 400 });
+    }
+
+    const session = await Session.findOne({ _id: sessionId, teacherId: decoded.userId });
+
+    if (!session) {
+      return NextResponse.json({ error: 'Session not found or unauthorized' }, { status: 404 });
+    }
+
+    session.status = status;
+    if (status === 'live') {
+      session.startedAt = new Date();
+    } else if (status === 'completed') {
+      session.endedAt = new Date();
+    }
+
+    await session.save();
+
+    return NextResponse.json({ message: 'Session updated', session }, { status: 200 });
+  } catch (error: any) {
+    console.error('Update session error:', error);
+    return NextResponse.json({ error: 'Failed to update session' }, { status: 500 });
   }
 }
