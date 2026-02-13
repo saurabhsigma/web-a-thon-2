@@ -80,6 +80,10 @@ export default function LiveClassRoom({ roomName, userName }: LiveClassRoomProps
             data-lk-theme="default"
             style={{ height: '100vh' }}
             onDisconnected={handleLeave}
+            onError={(error) => {
+                console.error('LiveKit Room error:', error);
+            }}
+            connect={true}
         >
             <VideoConference />
         </LiveKitRoom>
