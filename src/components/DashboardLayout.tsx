@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { 
-  FaChalkboard, FaChalkboardTeacher, FaVideo, FaBook, 
+import {
+  FaChalkboard, FaChalkboardTeacher, FaVideo, FaBook,
   FaUsers, FaGraduationCap, FaTrophy, FaQuestionCircle,
   FaSignOutAlt, FaHome, FaClock, FaClipboardList
 } from 'react-icons/fa';
 import { ReactNode } from 'react';
+import AIChatbot from '@/components/AIChatbot';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -31,12 +32,17 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
     { href: '/teacher/classes', icon: FaUsers, label: 'Classes' },
     { href: '/teacher/subjects', icon: FaBook, label: 'Subjects' },
     { href: '/teacher/sessions', icon: FaVideo, label: 'Sessions' },
+    { href: '/teacher/attendance', icon: FaClipboardList, label: 'Attendance' },
+    { href: '/teacher/materials', icon: FaBook, label: 'Materials' },
+    { href: '/teacher/quizzes', icon: FaQuestionCircle, label: 'Quizzes' },
   ];
 
   const studentNavItems = [
     { href: '/student/dashboard', icon: FaHome, label: 'Dashboard' },
     { href: '/student/classes', icon: FaUsers, label: 'My Class' },
     { href: '/student/sessions', icon: FaVideo, label: 'Sessions' },
+    { href: '/student/materials', icon: FaBook, label: 'Materials' },
+    { href: '/student/quizzes', icon: FaTrophy, label: 'My Quizzes' },
   ];
 
   const navItems = userRole === 'teacher' ? teacherNavItems : studentNavItems;
@@ -44,7 +50,7 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-yellow-50 to-blue-50">
       {/* Header */}
-      <motion.header 
+      <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="sticky top-0 z-50 border-b-4 border-green-800 bg-yellow-100/95 backdrop-blur-sm shadow-lg"
@@ -100,11 +106,10 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
                     whileTap={{ scale: 0.98 }}
                   >
                     <div
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all ${
-                        isActive
-                          ? 'bg-green-500 border-green-800 text-white shadow-md'
-                          : 'bg-white border-green-600 text-green-800 hover:bg-green-50'
-                      }`}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all ${isActive
+                        ? 'bg-green-500 border-green-800 text-white shadow-md'
+                        : 'bg-white border-green-600 text-green-800 hover:bg-green-50'
+                        }`}
                     >
                       <item.icon className="text-lg" />
                       <span className="font-semibold">{item.label}</span>
@@ -142,9 +147,8 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
               return (
                 <Link key={item.href} href={item.href}>
                   <div
-                    className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg ${
-                      isActive ? 'text-green-800' : 'text-gray-600'
-                    }`}
+                    className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg ${isActive ? 'text-green-800' : 'text-gray-600'
+                      }`}
                   >
                     <item.icon className={`text-xl ${isActive ? 'text-green-800' : ''}`} />
                     <span className="text-xs font-semibold">{item.label}</span>
@@ -166,6 +170,7 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
           </motion.div>
         </main>
       </div>
+      {userRole === 'student' && <AIChatbot />}
     </div>
   );
 }

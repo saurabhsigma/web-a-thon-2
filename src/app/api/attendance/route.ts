@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     const classId = searchParams.get('classId');
 
     let query: any = {};
-    
+
     // Students can only see their own attendance
     if (decoded.role === 'student') {
       query.studentId = decoded.userId;
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       present: attendance.filter(a => a.status === 'present').length,
       absent: attendance.filter(a => a.status === 'absent').length,
       late: attendance.filter(a => a.status === 'late').length,
-      averageDuration: attendance.length > 0 
+      averageDuration: attendance.length > 0
         ? Math.round(attendance.reduce((sum, a) => sum + (a.duration || 0), 0) / attendance.length)
         : 0,
     };
@@ -67,18 +67,78 @@ export async function POST(req: NextRequest) {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: string };
-    
+
     if (decoded.role !== 'teacher') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     await connectDB();
 
-    const { sessionId, studentId, status } = await req.json();
+    const body = await req.json();
+    // Check if this is a bulk update from TeacherAttendancePage
+    if (body.classId && body.date && body.attendance) {
+      const { classId, date, attendance: attendanceMap } = body;
+
+      // Find a session for this class on this date
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Find the most recent session for this day to mark attendance against
+      const session = await Session.findOne({
+        classId,
+        scheduledAt: { $gte: startOfDay, $lte: endOfDay }
+      }).sort({ scheduledAt: -1 });
+
+      if (!session) {
+        return NextResponse.json(
+          { error: 'No session found for this date. Please create a session first.' },
+          { status: 404 }
+        );
+      }
+
+      const updates = [];
+      const attendanceMapAny = attendanceMap as Record<string, boolean>;
+      for (const [studentId, isPresent] of Object.entries(attendanceMapAny)) {
+        updates.push({
+          updateOne: {
+            filter: { sessionId: session._id, studentId },
+            update: {
+              $set: {
+                status: (isPresent ? 'present' : 'absent') as 'present' | 'absent',
+                classId: session.classId,
+                subjectId: session.subjectId,
+                date: targetDate,
+                updatedAt: new Date()
+              },
+              $setOnInsert: {
+                joinTime: new Date(),
+                duration: 0,
+                isAutoMarked: false,
+                createdAt: new Date()
+              }
+            },
+            upsert: true
+          }
+        });
+      }
+
+      if (updates.length > 0) {
+        await Attendance.bulkWrite(updates);
+      }
+
+      return NextResponse.json({ message: 'Attendance saved successfully' }, { status: 200 });
+    }
+
+    // Single student update fallback
+    const { sessionId, studentId, status } = body;
 
     if (!sessionId || !studentId || !status) {
       return NextResponse.json(
-        { error: 'Session ID, student ID, and status are required' },
+        { error: 'Session ID, studentId, and status are required for single update' },
         { status: 400 }
       );
     }
@@ -110,6 +170,9 @@ export async function POST(req: NextRequest) {
         sessionId,
         studentId,
         status,
+        classId: session.classId,
+        subjectId: session.subjectId,
+        date: new Date(),
         isAutoMarked: false,
         joinTime: new Date(),
         duration: 0,
