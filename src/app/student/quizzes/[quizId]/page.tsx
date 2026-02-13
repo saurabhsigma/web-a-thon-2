@@ -6,8 +6,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress'; // Need to check if this exists or just use div
-import { FaClock, FaCheckCircle, FaTimesCircle, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
+import { FaClock, FaCheckCircle, FaTimesCircle, FaArrowRight, FaArrowLeft, FaTrophy } from 'react-icons/fa';
 
 export default function TakeQuizPage() {
     const { quizId } = useParams();

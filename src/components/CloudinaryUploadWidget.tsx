@@ -41,13 +41,7 @@ export default function CloudinaryUploadWidget({
             widgetRef.current = window.cloudinary.createUploadWidget(
                 {
                     cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dgigomqfz',
-                    uploadPreset: 'classroom_uploads', // Does this preset exist? Maybe use unsigned upload if not.
-                    // Let's assume an unsigned preset 'ml_default' or similar if 'classroom_uploads' is not set up.
-                    // For now, I'll use a standard variable, but user might need to configure this.
-                    // Actually, let's try to find a preset name from env or use a generic one.
-                    // I will use 'classroom_preset' and ask user to create it if it fails, OR just use the API Key method signature?
-                    // The upload widget requires an upload preset for unsigned uploads.
-                    apiKey: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
+                    uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'ml_default',
                     folder: folder,
                     resourceType: resourceType,
                     sources: ['local', 'url', 'camera'],
