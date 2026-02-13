@@ -10,6 +10,7 @@ import {
   FaSignOutAlt, FaHome, FaClock, FaClipboardList
 } from 'react-icons/fa';
 import { ReactNode } from 'react';
+import AIChatbot from '@/components/AIChatbot';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -32,12 +33,16 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
     { href: '/teacher/subjects', icon: FaBook, label: 'Subjects' },
     { href: '/teacher/sessions', icon: FaVideo, label: 'Sessions' },
     { href: '/teacher/attendance', icon: FaClipboardList, label: 'Attendance' },
+    { href: '/teacher/materials', icon: FaBook, label: 'Materials' },
+    { href: '/teacher/quizzes', icon: FaQuestionCircle, label: 'Quizzes' },
   ];
 
   const studentNavItems = [
     { href: '/student/dashboard', icon: FaHome, label: 'Dashboard' },
     { href: '/student/classes', icon: FaUsers, label: 'My Class' },
     { href: '/student/sessions', icon: FaVideo, label: 'Sessions' },
+    { href: '/student/materials', icon: FaBook, label: 'Materials' },
+    { href: '/student/quizzes', icon: FaTrophy, label: 'My Quizzes' },
   ];
 
   const navItems = userRole === 'teacher' ? teacherNavItems : studentNavItems;
@@ -102,8 +107,8 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
                   >
                     <div
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all ${isActive
-                          ? 'bg-green-500 border-green-800 text-white shadow-md'
-                          : 'bg-white border-green-600 text-green-800 hover:bg-green-50'
+                        ? 'bg-green-500 border-green-800 text-white shadow-md'
+                        : 'bg-white border-green-600 text-green-800 hover:bg-green-50'
                         }`}
                     >
                       <item.icon className="text-lg" />
@@ -165,6 +170,7 @@ export default function DashboardLayout({ children, userRole, userName }: Dashbo
           </motion.div>
         </main>
       </div>
+      {userRole === 'student' && <AIChatbot />}
     </div>
   );
 }

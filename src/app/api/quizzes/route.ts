@@ -19,16 +19,29 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const subjectId = searchParams.get('subjectId');
+    const classId = searchParams.get('classId');
     const sessionId = searchParams.get('sessionId');
 
     let query: any = {};
-    
+
+    // If teacher, optionally filter by their creation? 
+    // Actually, if a teacher is viewing a class, they should see all quizzes for that class/subject
+    // ensuring collaboration if multiple teachers exist. 
+    // But for now, let's keep it simple.
+
     if (decoded.role === 'teacher') {
       query.createdBy = decoded.userId;
     }
+
     if (subjectId) {
       query.subjectId = subjectId;
+    } else if (classId) {
+      // Find subjects for this class
+      const subjects = await Subject.find({ classId }).select('_id');
+      const subjectIds = subjects.map((s: any) => s._id);
+      query.subjectId = { $in: subjectIds };
     }
+
     if (sessionId) {
       query.sessionId = sessionId;
     }
@@ -55,23 +68,23 @@ export async function POST(req: NextRequest) {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: string };
-    
+
     if (decoded.role !== 'teacher') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     await connectDB();
 
-    const { 
-      title, 
-      description, 
-      subjectId, 
-      sessionId, 
-      questions, 
-      duration, 
-      totalMarks, 
+    const {
+      title,
+      description,
+      subjectId,
+      sessionId,
+      questions,
+      duration,
+      totalMarks,
       passingMarks,
-      isAIGenerated 
+      isAIGenerated
     } = await req.json();
 
     if (!title || !subjectId || !questions || !duration || !totalMarks) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import Session from '@/models/Session';
 import Class from '@/models/Class';
+import '@/models/Subject'; // Make sure Subject model is registered
 import connectDB from '@/lib/mongodb';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
